@@ -1,0 +1,87 @@
+/* frontend/src/Auth.css (Light Theme) */
+
+.auth-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.auth-form {
+  background-color: #f9f9f9; /* Light background */
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd; /* Light border */
+}
+
+.auth-form h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #333; /* Dark text */
+}
+
+.input-group {
+  margin-bottom: 15px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 0.9em;
+  color: #555; /* Darker label */
+}
+
+.input-group input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc; /* Light input border */
+  background-color: white; /* White input background */
+  color: #333; /* Dark input text */
+  font-size: 1em;
+  box-sizing: border-box;
+}
+
+.auth-button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 5px;
+  background-color: #007bff; /* Blue primary button */
+  color: white; /* Light button text */
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.auth-button:hover {
+  background-color: #0056b3;
+}
+
+.switch-link {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 0.9em;
+}
+
+.switch-link a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.message {
+    text-align: center;
+    margin-top: 15px;
+    color: #dc3545; /* Red for errors */
+}
+
+.success-message {
+    color: #28a745; /* Green for success */
+}

@@ -1,0 +1,16 @@
+# Python
+/backend/venv/
+__pycache__/
+*.pyc
+
+# Node
+/frontend/node_modules/
+/frontend/build/
+.pnp
+.pnp.js
+
+# Secrets
+*.env
+
+# Database
+/backend/sql_app.db

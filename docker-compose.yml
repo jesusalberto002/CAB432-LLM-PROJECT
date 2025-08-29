@@ -1,0 +1,44 @@
+# LLM-ASSESSMENT/docker-compose.yml
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Map your local backend folder to the backend subfolder inside the container
+      - ./backend:/code/backend
+    networks:
+      - app-network
+    environment:
+      - SECRET_KEY=plT4VTNxj+RfdBvIEc6kV8PanIEMa8hPgNWntGrCJfO3fjJ6Ex9RywRFTVta8Qsx
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=3600 # 60 hours
+
+  # The React Frontend Service
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  # The Ollama Service
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  ollama-data:
