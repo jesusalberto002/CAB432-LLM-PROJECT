@@ -82,18 +82,26 @@
   background-color: #0056b3;
 } 
 
-.logout-button {
+.history-button, .logout-button {
   padding: 8px 16px; /* Makes the button smaller */
   width: auto; /* Lets the button size to its content */
-  margin-left: auto; /* Pushes the button to the right */
+  margin-left: 10px; /* Pushes the button to the right */
   font-size: 0.9em;
   font-weight: bold;
   border: none;
   border-radius: 5px;
-  background-color: #007bff;
+  background-color: #6c757d;
   color: white;
   cursor: pointer;
   transition: background-color 0.2s;
+}
+
+.logout-button {
+  background-color: #007bff;
+}
+
+.history-button:hover, .logout-button:hover {
+  background-color: #5a6268;
 }
 
 .logout-button:hover {

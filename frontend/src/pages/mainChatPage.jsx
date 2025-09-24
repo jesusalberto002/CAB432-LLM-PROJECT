@@ -1,19 +1,43 @@
 // frontend/src/MainChat.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import api from '../api/axios'; // Import your pre-configured axios instance
 import './MainChat.css'; // Import the new CSS
 import DocumentUpload from '../components/documentUpload';
+import ChatHistory from '../components/ChatHistory';
 
 function MainChat() {
   const navigate = useNavigate();
+  // Initialize state with an array containing one object, as React expects.
   const [messages, setMessages] = useState([
-    { sender: 'llm', text: 'Hello! How can I help you today?' }
+    { sender: 'llm', text: 'Fetching a quote for you...' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
+
+  useEffect(() => {
+    const fetchQuote = async () => {
+      try {
+        const response = await api.get('/quote');
+        const quote = response.data;
+        // Correctly format the initial message as an object within an array.
+        const welcomeMessage = {
+          sender: 'llm',
+          text: `**Quote of the Day:**\n\n> "${quote.content}" — *${quote.author}*\n\nHow can I help you today?`
+        };
+        setMessages([welcomeMessage]);
+      } catch (error) {
+        console.error('Failed to fetch quote:', error);
+        // Ensure the fallback is also an object in an array.
+        setMessages([{ sender: 'llm', text: 'Hello! How can I help you today?' }]);
+      }
+    };
+
+    fetchQuote();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -73,7 +97,10 @@ function MainChat() {
     <div className="chat-page-container">
       <div className="chat-header">
         <h2>LLM Chat</h2>
-        <button onClick={handleLogout} className="logout-button">Logout</button>
+        <div>
+          <button onClick={() => setShowHistory(true)} className="history-button">History</button>
+          <button onClick={handleLogout} className="logout-button">Logout</button>
+        </div>
       </div>
 
       <div className="chat-history">
@@ -103,6 +130,7 @@ function MainChat() {
           </div>
         )}
       </div>
+      <ChatHistory show={showHistory} onClose={() => setShowHistory(false)} />
     </div>
   );
 }

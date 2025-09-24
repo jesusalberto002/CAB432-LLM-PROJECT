@@ -1,0 +1,30 @@
+# docker-compose.yml (for deployment on EC2)
+services:
+  backend:
+    # Replace with your ECR repository URI
+    image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11837225-llm-backend:latest
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+    environment:
+      - SECRET_KEY=plT4VTNxj+RfdBvIEc6kV8PanIEMa8hPgNWntGrCJfO3fjJ6Ex9RywRFTVta8Qsx
+      - ALGORITHM=HS26
+      - ACCESS_TOKEN_EXPIRE_MINUTES=60
+
+
+  frontend:
+    # Replace with your ECR repository URI
+    image: 901444280953.dkr.ecr.ap-southeast-2.amazonaws.com/n11837225-llm-frontend:latest
+    ports:
+      - "80:80" # Map to port 80 for public access
+    networks:
+      - app-network
+    depends_on:
+      - backend
+
+networks:
+  app-network:
+    # This tells compose to use the default network where your 'ollama' container is running
+    external: true
+    name: bridge
