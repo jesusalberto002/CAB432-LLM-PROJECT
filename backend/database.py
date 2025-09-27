@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
 
 # --- Configuration ---
-SECRET_NAME = "n11837225-rds-credentials"
+SECRET_NAME = "n11837225/rds-credentials"
 REGION_NAME = "ap-southeast-2"
 
 def get_secret():
