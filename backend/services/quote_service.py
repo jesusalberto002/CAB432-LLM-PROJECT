@@ -25,7 +25,7 @@ if CACHE_ENDPOINT:
         print(f"Successfully connected to ElastiCache at {CACHE_ENDPOINT}")
     except Exception as e:
         print(f"Warning: Could not connect to cache at {CACHE_ENDPOINT}. Caching will be disabled. Error: {e}")
-        cache = None # Ensure cache is None if connection fails
+        cache = None # Disable cache if connection fails
 
 def get_daily_quote():
     """Fetches a random quote, using a cache to limit API calls."""

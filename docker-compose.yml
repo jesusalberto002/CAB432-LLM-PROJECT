@@ -9,7 +9,7 @@ services:
       - "5000:8000"
     environment:
       # ElastiCache Configuration
-      CACHE_ENDPOINT: "cab432-a2-cache-n11837225.km2jzi.cfg.apse2.cache.amazonaws.com:11211" # <-- PASTE YOUR ENDPOINT HERE
+      CACHE_ENDPOINT: "cab432-a2-cache-n11837225.km2jzi.cfg.apse2.cache.amazonaws.com:11211"
 
       # Cognito Configuration
       COGNITO_USER_POOL_ID: "ap-southeast-2_LB7ZrgcGZ"
@@ -25,7 +25,7 @@ services:
     ports:
       - "8080:80"
     environment:
-      REACT_APP_API_URL: "http://llm-app-n11837225.cab432.com:5000/api/v1" # <-- Use YOUR Route 53 domain
+      REACT_APP_API_URL: "http://llm-app-n11837225.cab432.com:5000/api/v1" 
     depends_on:
       - backend
     networks:

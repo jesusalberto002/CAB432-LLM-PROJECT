@@ -1,6 +1,6 @@
 # backend/routers/admin.py
 from fastapi import APIRouter, Depends
-from ..auth import get_current_admin_user # We will create this function next
+from ..auth import get_current_admin_user
 from .. import models
 
 router = APIRouter()
