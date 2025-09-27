@@ -15,6 +15,9 @@ services:
       COGNITO_USER_POOL_ID: "ap-southeast-2_LB7ZrgcGZ"
       COGNITO_APP_CLIENT_ID: "3fm7qdn8bakjjeotmq7hqmgdj2"
       
+      # Add this line to tell the backend how to find Ollama
+      OLLAMA_HOST: "http://host.docker.internal:11434"
+      
     networks:
       - app_net
     restart: unless-stopped
@@ -31,19 +34,6 @@ services:
     networks:
       - app_net
     restart: unless-stopped
-
-  ollama:
-    image: ollama/ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    networks:
-      - app_net
-    restart: unless-stopped
-
-volumes:
-  ollama_data:
 
 networks:
   app_net:

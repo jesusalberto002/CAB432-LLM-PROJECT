@@ -1,11 +1,13 @@
 # backend/services/llm_service.py
+import os
 import requests
 from fastapi import HTTPException, status
 from .. import schemas
 from .. import models
 from sqlalchemy.orm import Session
 
-OLLAMA_API_URL = "http://ollama:11434/api/generate"
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+OLLAMA_API_URL = f"{OLLAMA_HOST}/api/generate"
 
 def generate_llm_response(prompt: str, db: Session, current_user: models.User):
     """Sends a prompt to the Ollama service and gets a response."""
