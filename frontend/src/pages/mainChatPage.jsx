@@ -52,23 +52,43 @@ function MainChat() {
 
     // If a file is selected, upload it first
     if (selectedFile) {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      try {
-        const token = localStorage.getItem('token');
-        await api.post('/documents/upload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        // You can add a success message or handle the response
-      } catch (error) {
-        console.error("File upload failed:", error);
-      }
-      setSelectedFile(null); // Clear the file after sending
-    }
+    try {
+      // Step 1: Get the pre-signed URL from our backend
+      const urlResponse = await api.post('/documents/generate-upload-url',
+        { filename: selectedFile.name },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
+      const { url, fields } = urlResponse.data;
+
+      // Step 2: Upload the file directly to S3 using the pre-signed URL
+      const formData = new FormData();
+      Object.entries(fields).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+      formData.append('file', selectedFile);
+
+      await fetch(url, {
+        method: 'POST',
+        body: formData,
+      });
+
+      // Step 3: Confirm the upload with our backend
+      await api.post('/documents/confirm-upload',
+        { filename: selectedFile.name },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      console.log("File uploaded successfully");
+
+    } catch (error) {
+      console.error("File upload failed:", error);
+      const errorResponse = { sender: 'llm', text: 'Sorry, the file upload failed.' };
+      setMessages(prevMessages => [...prevMessages, errorResponse]);
+    } finally {
+      setSelectedFile(null); // Clear the file after attempting upload
+    }
+  }
     const userMessage = { sender: 'user', text: input };
     setMessages(prevMessages => [...prevMessages, userMessage]);
     setInput('');
