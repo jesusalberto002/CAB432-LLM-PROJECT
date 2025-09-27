@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 from .. import models
 
 # --- Configuration ---
-# This name correctly points to your parameter.
 S3_BUCKET_PARAMETER_NAME = "/n11837225/s3-bucket-name"
 REGION_NAME = "ap-southeast-2"
 

@@ -51,8 +51,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
             audience=COGNITO_APP_CLIENT_ID,
             issuer=f"https://cognito-idp.{COGNITO_REGION}.amazonaws.com/{COGNITO_USER_POOL_ID}"
         )
-        
-        # *** CHANGE IS HERE: We now use the 'email' from the token ***
+
         user_identifier: str = payload.get("email")
         if user_identifier is None:
             raise credentials_exception

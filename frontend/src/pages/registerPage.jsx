@@ -15,7 +15,7 @@ function Register() {
     setMessage('');
 
     try {
-      // We now pass the email as the username to Cognito
+      //pass the email as the username to Cognito
       await signUp(email, password);
       // On success, navigate to the confirmation page, passing the email
       navigate('/confirm', { state: { email } });
