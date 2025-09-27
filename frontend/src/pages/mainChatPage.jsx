@@ -50,6 +50,8 @@ function MainChat() {
     
     setIsLoading(true);
 
+    const token = localStorage.getItem('token');
+
     // If a file is selected, upload it first
     if (selectedFile) {
     try {
@@ -95,7 +97,6 @@ function MainChat() {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
       const response = await api.post('/chat', 
         { prompt: input },
         { headers: { Authorization: `Bearer ${token}` } }
