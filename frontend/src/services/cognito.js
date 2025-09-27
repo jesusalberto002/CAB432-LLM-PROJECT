@@ -13,9 +13,15 @@ const poolData = {
 
 const userPool = new CognitoUserPool(poolData);
 
-// The 'username' parameter here will be the user's email
+// Debugging helper
+const log = (message, ...args) => {
+  console.log('[Cognito DEBUG]', message, ...args);
+};
+
+// Signup function
 export const signUp = (email, password) => {
   return new Promise((resolve, reject) => {
+    log('Signing up user:', email);
     const attributeList = [
       new CognitoUserAttribute({
         Name: 'email',
@@ -24,59 +30,86 @@ export const signUp = (email, password) => {
     ];
 
     userPool.signUp(email, password, attributeList, null, (err, result) => {
-      if (err) return reject(err);
+      if (err) {
+        log('SignUp error:', err);
+        return reject(err);
+      }
+      log('SignUp success:', result.user.getUsername());
       resolve(result.user);
     });
   });
 };
 
-// The 'username' parameter here will be the user's email
+// Confirm signup
 export const confirmSignUp = (email, code) => {
   return new Promise((resolve, reject) => {
+    log('Confirming signup for:', email);
     const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
+
     cognitoUser.confirmRegistration(code, true, (err, result) => {
       if (err) {
-        reject(err);
-        return;
+        log('ConfirmSignUp error:', err);
+        return reject(err);
       }
+      log('ConfirmSignUp success:', result);
       resolve(result);
     });
   });
 };
 
-// The 'username' parameter here will be the user's email
+// Authenticate (login)
 export const authenticate = (email, password) => {
   return new Promise((resolve, reject) => {
+    log('Authenticating user:', email);
     const authenticationData = { Username: email, Password: password };
     const authenticationDetails = new AuthenticationDetails(authenticationData);
     const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
 
     cognitoUser.authenticateUser(authenticationDetails, {
       onSuccess: (result) => {
+        log('Authentication success:', result);
         resolve({ session: result });
       },
       onFailure: (err) => {
+        log('Authentication failure:', err);
         reject(err);
       },
-      mfaRequired: () => {
-        // If MFA is required, we resolve with the user object so the UI
-        // can prompt for the MFA code.
+      mfaRequired: (challengeName, challengeParameters) => {
+        log('MFA required. Challenge:', challengeName, challengeParameters);
+        resolve({ mfaUser: cognitoUser });
+      },
+      newPasswordRequired: (userAttributes, requiredAttributes) => {
+        log('New password required:', userAttributes, requiredAttributes);
+        reject(new Error('New password required for this user.'));
+      },
+      totpRequired: (challengeName, challengeParameters) => {
+        log('TOTP MFA required. Challenge:', challengeName, challengeParameters);
+        resolve({ mfaUser: cognitoUser });
+      },
+      mfaSetup: (challengeName, challengeParameters) => {
+        log('MFA setup required. Challenge:', challengeName, challengeParameters);
         resolve({ mfaUser: cognitoUser });
       },
     });
   });
 };
 
-// Add this new function to handle the MFA code submission
+// Confirm MFA
 export const confirmMfa = (mfaUser, mfaCode) => {
-    return new Promise((resolve, reject) => {
-        mfaUser.sendMFACode(mfaCode, {
-            onSuccess: (result) => {
-                resolve(result);
-            },
-            onFailure: (err) => {
-                reject(err);
-            }
-        });
+  return new Promise((resolve, reject) => {
+    log('Confirming MFA code for user:', mfaUser.getUsername());
+    mfaUser.sendMFACode(mfaCode, {
+      onSuccess: (result) => {
+        log('MFA confirmation success:', result);
+        resolve(result);
+      },
+      onFailure: (err) => {
+        log('MFA confirmation failure:', err);
+        reject(err);
+      },
+      mfaSetup: (challengeName, challengeParameters) => {
+        log('MFA setup challenge during confirmation:', challengeName, challengeParameters);
+      },
     });
+  });
 };
