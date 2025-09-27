@@ -6,6 +6,7 @@ import ProtectedRoute from './services/protectedRoute';
 import Login from './pages/loginPage';
 import Register from './pages/registerPage';
 import MainChat from './pages/mainChatPage';
+import ConfirmPage from './pages/confirmPage';
 
 
 
@@ -21,6 +22,7 @@ function App() {
             
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/confirm" element={<ConfirmPage />} />
 
             {/* This is the protected route for the main chat */}
             <Route

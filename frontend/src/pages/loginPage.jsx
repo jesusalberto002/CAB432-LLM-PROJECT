@@ -1,34 +1,30 @@
-import { React, useState } from 'react';
+// frontend/src/pages/loginPage.jsx
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import api from '../api/axios';
+import { authenticate } from '../services/cognito';
 import './pages.css';
 
-// SOLUTION: Define the style objects
-
 function LoginPage() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    try {
-      const response = await api.post('/login', { username, password });
-      
-      // SOLUTION: Get 'data' from the response object
-      const data = response.data;
+    setMessage('');
 
-      if (data.access_token) {
-        localStorage.setItem('token', data.access_token);
+    try {
+      // We now use the email to authenticate
+      const session = await authenticate(email, password);
+      const token = session.getIdToken().getJwtToken();
+      
+      if (token) {
+        localStorage.setItem('token', token);
         navigate('/chat');
       }
     } catch (error) {
-      if (error.response) {
-        setMessage(error.response.data.detail || 'Login failed.');
-      } else {
-        setMessage('An error occurred. Please try again.');
-      }
+      setMessage(error.message || 'Login failed.');
     }
   };
 
@@ -37,11 +33,11 @@ function LoginPage() {
       <form onSubmit={handleLogin} className="auth-form">
         <h2>Login</h2>
         <div className="input-group">
-          <label>Username:</label>
+          <label>Email:</label>
           <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
