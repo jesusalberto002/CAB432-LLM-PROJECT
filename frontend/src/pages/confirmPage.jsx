@@ -1,4 +1,3 @@
-// frontend/src/pages/confirmPage.jsx
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { confirmSignUp } from '../services/cognito';
@@ -7,7 +6,6 @@ import './pages.css';
 function ConfirmPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  // Get email from navigation state
   const [email, setEmail] = useState(location.state?.email || '');
   const [code, setCode] = useState('');
   const [message, setMessage] = useState('');
@@ -19,14 +17,15 @@ function ConfirmPage() {
     setIsSuccess(false);
 
     try {
-      // Use email to confirm the user
       await confirmSignUp(email, code);
       setIsSuccess(true);
       setMessage('Confirmation successful! Redirecting to login...');
       setTimeout(() => navigate('/login'), 2000);
     } catch (error) {
-      setMessage(error.message || 'Confirmation failed. Please check the code.');
+      // Cognito error messages may have code and message
+      setMessage(error.message || JSON.stringify(error) || 'Confirmation failed.');
       setIsSuccess(false);
+      console.error('Confirmation error:', error);
     }
   };
 
@@ -56,7 +55,7 @@ function ConfirmPage() {
         </div>
         <button type="submit" className="auth-button">Confirm</button>
         {message && (
-          <p className={`message ${isSuccess ? 'success-message' : ''}`}>
+          <p className={`message ${isSuccess ? 'success-message' : 'error-message'}`}>
             {message}
           </p>
         )}
