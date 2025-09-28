@@ -42,10 +42,11 @@ function LoginPage() {
 
     try {
       const result = await confirmMfa(mfaUser, mfaCode);
-      const token = result.idToken;
-
-      localStorage.setItem('token', token);
-      navigate('/chat');
+      if (result.session) {
+        const token = result.session.idToken;
+        localStorage.setItem('token', token);
+        navigate('/chat');
+      }
     } catch (error) {
       setMessage(error.message || 'MFA confirmation failed.');
     }
