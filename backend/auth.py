@@ -10,9 +10,9 @@ from sqlalchemy.orm import Session
 from . import models, database, schemas
 
 # --- Cognito Configuration ---
-COGNITO_USER_POOL_ID = "ap-southeast-2_LB7ZrgcGZ"
+COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID", "ap-southeast-2_LB7ZrgcGZ")
 COGNITO_REGION = "ap-southeast-2"
-COGNITO_APP_CLIENT_ID = "5pij8s6i58k50ilq3ms8qppgp8"
+COGNITO_APP_CLIENT_ID = os.getenv("COGNITO_APP_CLIENT_ID", "5pij8s6i58k50ilq3ms8qppgp8")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
