@@ -22,7 +22,7 @@ function LoginPage() {
 
       if (result.session) {
         // Login successful
-        const token = result.session.getIdToken().getJwtToken();
+        const token = result.session.idToken;
         localStorage.setItem('token', token);
         navigate('/chat');
       } else if (result.mfaUser) {
@@ -42,7 +42,7 @@ function LoginPage() {
 
     try {
       const result = await confirmMfa(mfaUser, mfaCode);
-      const token = result.getIdToken().getJwtToken();
+      const token = result.idToken;
 
       localStorage.setItem('token', token);
       navigate('/chat');
