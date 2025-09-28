@@ -58,39 +58,29 @@ export const confirmSignUp = (email, code) => {
 export const authenticate = (email, password) => {
   return new Promise((resolve, reject) => {
     log('Authenticating user:', email);
-    const authenticationDetails = new AuthenticationDetails({
+
+    const authDetails = new AuthenticationDetails({
       Username: email,
       Password: password,
     });
     const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
 
+    // Use USER_PASSWORD_AUTH flow
     cognitoUser.setAuthenticationFlowType('USER_PASSWORD_AUTH');
 
-    cognitoUser.authenticateUser(authenticationDetails, {
+    cognitoUser.authenticateUser(authDetails, {
       onSuccess: (result) => {
-        const safeResult = {
+        const session = {
           idToken: result.getIdToken().getJwtToken(),
           accessToken: result.getAccessToken().getJwtToken(),
           refreshToken: result.getRefreshToken().getToken(),
         };
-        log('Authentication success:', safeResult);
-        resolve({ session: safeResult });
+        log('Authentication success:', session);
+        resolve({ session });
       },
       onFailure: (err) => {
         log('Authentication failure:', err);
         reject(err);
-      },
-      mfaRequired: (challengeName, challengeParameters) => {
-        log('MFA required:', challengeName, challengeParameters);
-        resolve({
-          mfaUser: cognitoUser,
-          challenge: 'EMAIL_MFA',
-          parameters: challengeParameters,
-        });
-      },
-      newPasswordRequired: (userAttributes, requiredAttributes) => {
-        log('New password required:', userAttributes, requiredAttributes);
-        reject(new Error('New password required for this user.'));
       },
     });
   });
