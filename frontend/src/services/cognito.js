@@ -104,8 +104,13 @@ export const confirmMfa = (mfaUser, mfaCode) => {
     log('Confirming MFA code for user:', mfaUser.getUsername());
     mfaUser.sendMFACode(mfaCode, {
       onSuccess: (result) => {
-        log('MFA confirmation success:', result);
-        resolve(result);
+        const safeResult = {
+          idToken: result.getIdToken().getJwtToken(),
+          accessToken: result.getAccessToken().getJwtToken(),
+          refreshToken: result.getRefreshToken().getToken(),
+        };
+        log('MFA confirmation success:', safeResult);
+        resolve({ session: safeResult }); // Resolve with a session object
       },
       onFailure: (err) => {
         log('MFA confirmation failure:', err);
