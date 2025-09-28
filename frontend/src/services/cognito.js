@@ -80,18 +80,18 @@ export const authenticate = (email, password) => {
         log('Authentication failure:', err);
         reject(err);
       },
-      mfaRequired: (challengeName, challengeParameters) => {
-        log('MFA required:', challengeName, challengeParameters);
-        resolve({
-          mfaUser: cognitoUser,
-          challenge: 'EMAIL_MFA',
-          parameters: challengeParameters,
-        });
-      },
-      newPasswordRequired: (userAttributes, requiredAttributes) => {
-        log('New password required:', userAttributes, requiredAttributes);
-        reject(new Error('New password required for this user.'));
-      },
+    //   mfaRequired: (challengeName, challengeParameters) => {
+    //     log('MFA required:', challengeName, challengeParameters);
+    //     resolve({
+    //       mfaUser: cognitoUser,
+    //       challenge: 'EMAIL_MFA',
+    //       parameters: challengeParameters,
+    //     });
+    //   },
+    //   newPasswordRequired: (userAttributes, requiredAttributes) => {
+    //     log('New password required:', userAttributes, requiredAttributes);
+    //     reject(new Error('New password required for this user.'));
+    //   },
     });
   });
 };
