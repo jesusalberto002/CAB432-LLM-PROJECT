@@ -67,28 +67,45 @@ export const authenticate = (email, password) => {
 
     cognitoUser.authenticateUser(authenticationDetails, {
       onSuccess: (result) => {
-        log('Authentication success:', result);
-        resolve({ session: result });
+        // Ensure NewDeviceMetadata is optional
+        const safeResult = {
+          ...result,
+          newDeviceMetadata: result?.getIdToken?.().payload?.NewDeviceMetadata || null,
+        };
+        log('Authentication success:', safeResult);
+        resolve({ session: safeResult });
       },
       onFailure: (err) => {
         log('Authentication failure:', err);
         reject(err);
       },
       mfaRequired: (challengeName, challengeParameters) => {
-        log('MFA required. Challenge:', challengeName, challengeParameters);
-        resolve({ mfaUser: cognitoUser });
+        log('MFA required:', challengeName, challengeParameters);
+        resolve({
+          mfaUser: cognitoUser,
+          challenge: 'SMS_MFA',
+          parameters: challengeParameters,
+        });
+      },
+      totpRequired: (challengeName, challengeParameters) => {
+        log('TOTP MFA required:', challengeName, challengeParameters);
+        resolve({
+          mfaUser: cognitoUser,
+          challenge: 'SOFTWARE_TOKEN_MFA',
+          parameters: challengeParameters,
+        });
       },
       newPasswordRequired: (userAttributes, requiredAttributes) => {
         log('New password required:', userAttributes, requiredAttributes);
         reject(new Error('New password required for this user.'));
       },
-      totpRequired: (challengeName, challengeParameters) => {
-        log('TOTP MFA required. Challenge:', challengeName, challengeParameters);
-        resolve({ mfaUser: cognitoUser });
-      },
       mfaSetup: (challengeName, challengeParameters) => {
-        log('MFA setup required. Challenge:', challengeName, challengeParameters);
-        resolve({ mfaUser: cognitoUser });
+        log('MFA setup required:', challengeName, challengeParameters);
+        resolve({
+          mfaUser: cognitoUser,
+          challenge: 'MFA_SETUP',
+          parameters: challengeParameters,
+        });
       },
     });
   });
