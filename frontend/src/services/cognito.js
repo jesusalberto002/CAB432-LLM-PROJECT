@@ -8,7 +8,7 @@ import {
 
 const poolData = {
   UserPoolId: 'ap-southeast-2_LB7ZrgcGZ', // Your User Pool ID
-  ClientId: '5pij8s6i58k50ilq3ms8qppgp8',   // Your App Client ID
+  ClientId: '5pij8s6i58k50ilq3ms8qppgp8', // Your App Client ID
 };
 
 const userPool = new CognitoUserPool(poolData);
@@ -18,15 +18,12 @@ const log = (message, ...args) => {
   console.log('[Cognito DEBUG]', message, ...args);
 };
 
-// Signup function
+// Signup
 export const signUp = (email, password) => {
   return new Promise((resolve, reject) => {
     log('Signing up user:', email);
     const attributeList = [
-      new CognitoUserAttribute({
-        Name: 'email',
-        Value: email,
-      }),
+      new CognitoUserAttribute({ Name: 'email', Value: email }),
     ];
 
     userPool.signUp(email, password, attributeList, null, (err, result) => {
@@ -61,34 +58,41 @@ export const confirmSignUp = (email, code) => {
 export const authenticate = (email, password) => {
   return new Promise((resolve, reject) => {
     log('Authenticating user:', email);
-    const authenticationData = { Username: email, Password: password };
-    const authenticationDetails = new AuthenticationDetails(authenticationData);
+    const authenticationDetails = new AuthenticationDetails({
+      Username: email,
+      Password: password,
+    });
     const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
 
     cognitoUser.authenticateUser(authenticationDetails, {
       onSuccess: (result) => {
-        log('Authentication success:', result);
-        resolve({ session: result });
+        const safeResult = {
+          idToken: result.getIdToken().getJwtToken(),
+          accessToken: result.getAccessToken().getJwtToken(),
+          refreshToken: result.getRefreshToken().getToken(),
+        };
+        log('Authentication success:', safeResult);
+        resolve({ session: safeResult });
       },
       onFailure: (err) => {
         log('Authentication failure:', err);
         reject(err);
       },
       mfaRequired: (challengeName, challengeParameters) => {
-        log('MFA required. Challenge:', challengeName, challengeParameters);
-        resolve({ mfaUser: cognitoUser });
+        log('MFA required:', challengeName, challengeParameters);
+        resolve({ mfaUser: cognitoUser, challenge: 'SMS_MFA', parameters: challengeParameters });
+      },
+      totpRequired: (challengeName, challengeParameters) => {
+        log('TOTP MFA required:', challengeName, challengeParameters);
+        resolve({ mfaUser: cognitoUser, challenge: 'SOFTWARE_TOKEN_MFA', parameters: challengeParameters });
       },
       newPasswordRequired: (userAttributes, requiredAttributes) => {
         log('New password required:', userAttributes, requiredAttributes);
         reject(new Error('New password required for this user.'));
       },
-      totpRequired: (challengeName, challengeParameters) => {
-        log('TOTP MFA required. Challenge:', challengeName, challengeParameters);
-        resolve({ mfaUser: cognitoUser });
-      },
       mfaSetup: (challengeName, challengeParameters) => {
-        log('MFA setup required. Challenge:', challengeName, challengeParameters);
-        resolve({ mfaUser: cognitoUser });
+        log('MFA setup required:', challengeName, challengeParameters);
+        resolve({ mfaUser: cognitoUser, challenge: 'MFA_SETUP', parameters: challengeParameters });
       },
     });
   });
@@ -106,9 +110,6 @@ export const confirmMfa = (mfaUser, mfaCode) => {
       onFailure: (err) => {
         log('MFA confirmation failure:', err);
         reject(err);
-      },
-      mfaSetup: (challengeName, challengeParameters) => {
-        log('MFA setup challenge during confirmation:', challengeName, challengeParameters);
       },
     });
   });

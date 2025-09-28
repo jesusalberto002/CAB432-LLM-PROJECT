@@ -11,7 +11,7 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 # --- CORS Middleware ---
-origins = ["http://localhost:3000", "localhost:3000", "http://54.253.169.172:8080", "http://llm-app-n11837225.cab432.com:8080"]
+origins = ["http://localhost:3000", "localhost:3000", "http://54.253.169.172:8080", "http://n11837225.cab432.com:8080"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
