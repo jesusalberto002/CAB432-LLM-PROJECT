@@ -7,8 +7,8 @@ import {
 } from 'amazon-cognito-identity-js';
 
 const poolData = {
-  UserPoolId: 'ap-southeast-2_LB7ZrgcGZ', // Your User Pool ID
-  ClientId: '5pij8s6i58k50ilq3ms8qppgp8', // Your App Client ID
+  UserPoolId: 'ap-southeast-2_LB7ZrgcGZ',
+  ClientId: '5pij8s6i58k50ilq3ms8qppgp8',
 };
 
 const userPool = new CognitoUserPool(poolData);
@@ -64,6 +64,8 @@ export const authenticate = (email, password) => {
     });
     const cognitoUser = new CognitoUser({ Username: email, Pool: userPool });
 
+    cognitoUser.setAuthenticationFlowType('USER_PASSWORD_AUTH');
+
     cognitoUser.authenticateUser(authenticationDetails, {
       onSuccess: (result) => {
         const safeResult = {
@@ -80,19 +82,15 @@ export const authenticate = (email, password) => {
       },
       mfaRequired: (challengeName, challengeParameters) => {
         log('MFA required:', challengeName, challengeParameters);
-        resolve({ mfaUser: cognitoUser, challenge: 'SMS_MFA', parameters: challengeParameters });
-      },
-      totpRequired: (challengeName, challengeParameters) => {
-        log('TOTP MFA required:', challengeName, challengeParameters);
-        resolve({ mfaUser: cognitoUser, challenge: 'SOFTWARE_TOKEN_MFA', parameters: challengeParameters });
+        resolve({
+          mfaUser: cognitoUser,
+          challenge: 'EMAIL_MFA',
+          parameters: challengeParameters,
+        });
       },
       newPasswordRequired: (userAttributes, requiredAttributes) => {
         log('New password required:', userAttributes, requiredAttributes);
         reject(new Error('New password required for this user.'));
-      },
-      mfaSetup: (challengeName, challengeParameters) => {
-        log('MFA setup required:', challengeName, challengeParameters);
-        resolve({ mfaUser: cognitoUser, challenge: 'MFA_SETUP', parameters: challengeParameters });
       },
     });
   });
@@ -102,20 +100,24 @@ export const authenticate = (email, password) => {
 export const confirmMfa = (mfaUser, mfaCode) => {
   return new Promise((resolve, reject) => {
     log('Confirming MFA code for user:', mfaUser.getUsername());
-    mfaUser.sendMFACode(mfaCode, {
-      onSuccess: (result) => {
-        const safeResult = {
-          idToken: result.getIdToken().getJwtToken(),
-          accessToken: result.getAccessToken().getJwtToken(),
-          refreshToken: result.getRefreshToken().getToken(),
-        };
-        log('MFA confirmation success:', safeResult);
-        resolve({ session: safeResult }); // Resolve with a session object
+    mfaUser.sendMFACode(
+      mfaCode,
+      {
+        onSuccess: (result) => {
+          const safeResult = {
+            idToken: result.getIdToken().getJwtToken(),
+            accessToken: result.getAccessToken().getJwtToken(),
+            refreshToken: result.getRefreshToken().getToken(),
+          };
+          log('MFA confirmation success:', safeResult);
+          resolve({ session: safeResult });
+        },
+        onFailure: (err) => {
+          log('MFA confirmation failure:', err);
+          reject(err);
+        },
       },
-      onFailure: (err) => {
-        log('MFA confirmation failure:', err);
-        reject(err);
-      },
-    });
+      'EMAIL'
+    );
   });
 };
