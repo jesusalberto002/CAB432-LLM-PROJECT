@@ -5,34 +5,6 @@ import json
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
-
-# --- Configuration ---
-SECRET_NAME = "n11837225/rds-credentials"
-REGION_NAME = "ap-southeast-2"
-
-def get_secret():
-    """Fetches database credentials from AWS Secrets Manager."""
-    session = boto3.session.Session()
-    client = session.client(
-        service_name='secretsmanager',
-        region_name=REGION_NAME
-    )
-
-    try:
-        get_secret_value_response = client.get_secret_value(
-            SecretId=SECRET_NAME
-        )
-    except (NoCredentialsError, PartialCredentialsError) as e:
-        print("FATAL: AWS credentials not found. Ensure your EC2 instance has an IAM role with permission to access Secrets Manager.")
-        raise e
-    except ClientError as e:
-        print(f"FATAL: Could not retrieve secret '{SECRET_NAME}' from AWS Secrets Manager. Error: {e}")
-        raise e
-
-    # Decrypts secret using the associated KMS key and returns it as a string
-    secret = get_secret_value_response['SecretString']
-    return json.loads(secret)
 
 # --- Database Setup ---
 # Define these as None initially in case the secret retrieval fails
@@ -41,31 +13,39 @@ SessionLocal = None
 Base = declarative_base()
 
 try:
-    # Fetch credentials and build the database URL
-    credentials = get_secret()
-    DB_USERNAME = credentials['username']
-    DB_PASSWORD = credentials['password']
-    DB_HOST = credentials['host']
-    DB_PORT = credentials.get('port', 5432)
-    DB_NAME = credentials['dbname']
+    DB_USERNAME = os.getenv("DB_USERNAME")
+    DB_PASSWORD = os.getenv("DB_PASSWORD")
+    DB_HOST = os.getenv("DB_HOST")
+    DB_PORT_STR = os.getenv("DB_PORT")
+    DB_NAME = os.getenv("DB_NAME")
 
-    # Construct the database URL with the required SSL mode
+    if not all([DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT_STR, DB_NAME]):
+        print("FATAL: Missing database configuration in environment variables.")
+        raise ValueError("Missing database configuration in environment variables.")
+
+    try:
+        DB_PORT = int(DB_PORT_STR)
+    except ValueError:
+        print(f"FATAL: Invalid DB_PORT value: {DB_PORT_STR}.")
+        raise
+
     SQLALCHEMY_DATABASE_URL = (
         f"postgresql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
         "?sslmode=require"
     )
 
+    print(f"Connecting to database host: {DB_HOST}") # Added log
     engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    print("Database engine and session created successfully.") # Added log
 
 except Exception as e:
-    print(f"FATAL: Could not configure the database connection due to an error: {e}")
+    print(f"FATAL: Could not configure database connection: {type(e).__name__} - {e}")
 
+# --- get_db() function remains the same ---
 def get_db():
-    """Dependency to get a DB session for each request."""
     if SessionLocal is None:
         raise Exception("Database is not configured. Check application logs for startup errors.")
-    
     db = SessionLocal()
     try:
         yield db

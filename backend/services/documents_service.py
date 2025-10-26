@@ -6,35 +6,21 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from .. import models
 
-# --- Configuration ---
-S3_BUCKET_PARAMETER_NAME = "/n11837225/s3-bucket-name"
-REGION_NAME = "ap-southeast-2"
-
-def get_s3_bucket_name():
-    """Fetches the S3 bucket name from AWS Parameter Store."""
-    try:
-        ssm_client = boto3.client('ssm', region_name=REGION_NAME)
-        response = ssm_client.get_parameter(Name=S3_BUCKET_PARAMETER_NAME)
-        return response['Parameter']['Value']
-    except (NoCredentialsError, PartialCredentialsError) as e:
-        print("FATAL: AWS credentials not found. Ensure EC2 instance has the correct IAM role.")
-        raise HTTPException(status_code=500, detail="Server not configured for AWS access.")
-    except ClientError as e:
-        if e.response['Error']['Code'] == 'ParameterNotFound':
-            print(f"FATAL: Parameter '{S3_BUCKET_PARAMETER_NAME}' not found in Parameter Store.")
-            raise HTTPException(status_code=500, detail="S3 bucket configuration is missing.")
-        else:
-            print(f"Error fetching from Parameter Store: {e}")
-            raise HTTPException(status_code=500, detail="Could not retrieve S3 configuration.")
-
-# --- S3 Client Initialization ---
-S3_BUCKET_NAME = None
+# Read bucket name directly from environment variable
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 s3_client = None
-try:
-    S3_BUCKET_NAME = get_s3_bucket_name()
-    s3_client = boto3.client('s3', region_name=REGION_NAME)
-except HTTPException as e:
-    print(f"Failed to initialize S3 service: {e.detail}")
+
+if S3_BUCKET_NAME:
+    try:
+        # Initialize client only if bucket name is present
+        s3_client = boto3.client('s3', region_name=REGION_NAME)
+        print(f"S3 Service configured for bucket: {S3_BUCKET_NAME}")
+    except Exception as e: # Catch potential boto3 client errors more broadly
+         print(f"Warning: Failed to initialize S3 client: {e}")
+         S3_BUCKET_NAME = None # Ensure bucket name is None if client fails
+         s3_client = None
+else:
+    print("Warning: S3_BUCKET_NAME environment variable not set. Document features disabled.")
 
 def create_presigned_post_url(filename: str, user_id: int):
     """
